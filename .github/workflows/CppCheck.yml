@@ -16,4 +16,4 @@ jobs:
         shell: bash
         run: |
           sudo apt install cppcheck
-          cppcheck --enable=warning,portability,performance --language=c --platform=unix32 --std=c99 --force . -i examples/ -i examples-gcc/ -i examples-iar/ -i examples-rowley/ -i examples-segger/
+          cppcheck --enable=warning,portability,performance --error-exitcode=1 --language=c --platform=unix32 --std=c99 --force . -i examples/ -i examples-gcc/ -i examples-iar/ -i examples-rowley/ -i examples-segger/
