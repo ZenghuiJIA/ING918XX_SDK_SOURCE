@@ -1,4 +1,9 @@
 {
+    "adv_patch_enable": "0x02003b31",
+    "adv_patch_set_addr": "0x02003b69",
+    "adv_patch_set_adv_data": "0x02003b8d",
+    "adv_patch_set_interval": "0x02003bb5",
+    "adv_patch_set_rsp_data": "0x02003bcd",
     "att_dispatch_client_can_send_now": "0x00006875",
     "att_dispatch_client_request_can_send_now_event": "0x0000687b",
     "att_dispatch_register_client": "0x00006881",
