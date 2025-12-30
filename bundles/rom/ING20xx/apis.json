@@ -1,4 +1,5 @@
 {
+    "adv_get_last_terminated_adv_set": "0x02003b25",
     "adv_patch_enable": "0x02003b31",
     "adv_patch_set_addr": "0x02003b69",
     "adv_patch_set_adv_data": "0x02003b8d",
@@ -140,6 +141,7 @@
     "hci_add_event_handler": "0x02003e25",
     "hci_power_control": "0x0000c1a5",
     "hci_register_acl_packet_handler": "0x0000c359",
+    "is_adv_set_advertising": "0x02003efd",
     "kv_commit": "0x0000caa9",
     "kv_get": "0x0000cb05",
     "kv_init": "0x0000cb11",

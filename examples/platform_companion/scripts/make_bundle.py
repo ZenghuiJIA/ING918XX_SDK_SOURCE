@@ -17,6 +17,8 @@ added_api = ['platform_rom_hotfix', 'platform_rom_hotfix_using_fpb',
             "adv_patch_enable",
             "adv_patch_set_adv_data",
             "adv_patch_set_rsp_data",
+            "is_adv_set_advertising",
+            "adv_get_last_terminated_adv_set",
 ]
 
 PAGE = 1024 * 4 # size of a sector
