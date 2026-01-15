@@ -55,6 +55,9 @@ __heap_limit
                 AREA    RESET, DATA, READONLY
                 EXPORT  __Vectors
 				EXPORT  __PLATFORM_VER
+                EXPORT  __APP_LOAD_ADD
+                EXPORT  __ALL_END
+                EXPORT  __PATCH_ADD
 				IMPORT  platform_patches
 
 __Vectors       DCD     __initial_sp              ; Top of Stack
@@ -154,8 +157,14 @@ __Vectors_Size  EQU     __Vectors_End - __Vectors
 
 __PLATFORM_VER  DCD     (VER_MAJOR << 0) + (VER_MINOR << 16) + (VER_PATCH << 24)  ; Version
 __APP_LOAD_ADD  DCD     0x02004000
-	            DCD     platform_patches
-
+__PATCH_ADD     DCD     platform_patches
+                DCD     0xffffffff
+                DCD     0xffffffff
+                DCD     0xffffffff
+                DCD     0xffffffff
+                DCD     0xffffffff
+                DCD     0xffffffff
+                DCD     0xffffffff
 __ALL_END
 
 __FILLING_SIZE  EQU     EFLASH_SEC_SIZE - (__ALL_END - __Vectors)

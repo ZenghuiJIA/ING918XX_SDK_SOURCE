@@ -33,19 +33,27 @@ if os.path.exists(STACK_BIN):
 
 shutil.copyfile(f'../{PROJ_NAME}.bin', STACK_BIN)
 
+symbols_addr = {}
+symbols_size = {}
+SYMS_TO_READ = set(['__Vectors', '__PATCH_ADD', '__PLATFORM_VER', '__ALL_END', '__APP_LOAD_ADD', 'platform_patches'])
+
 def get_meta_from_map(fn):
     r = {}
-    global BIN_INFO_OFFSET
     global PAGE, patch_ram_usage
     with open(fn, 'r') as f:
         for line in f:
+            m = re.match(r"^\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+(0x[0-9a-fA-F]{8})\s+Data\s+([0-9]+)", line)
+            if (m is not None) and (m.group(1) in SYMS_TO_READ):
+                symbols_addr[m.group(1)] = int(m.group(2), 0)
+                symbols_size[m.group(1)] = int(m.group(3))
+
             m = re.match(r".*LR_IROM1 \(Base: 0x([0-9a-fA-F]{8}), .+COMPRESSED\[0x([0-9a-fA-F]{8})\]", line)
-            if not (m is None):
+            if m is not None:
                 r['rom'] = {"base" : int(m.group(1), 16), "size" : int(m.group(2), 16)}
                 continue
 
             m = re.match(r".*LR_IROM1 \(Base: 0x([0-9a-fA-F]{8}), Size: 0x([0-9a-fA-F]{8})", line)
-            if not (m is None):
+            if m is not None:
                 r['rom'] = {"base" : int(m.group(1), 16), "size" : int(m.group(2), 16)}
                 continue
 
@@ -53,7 +61,7 @@ def get_meta_from_map(fn):
             m = re.match(r".*RW_IRAM2 \(Base: 0x([0-9a-fA-F]{8}),.*Size: 0x([0-9a-fA-F]{8})", line)
             if m is None:
                 m = re.match(r".*RW_IRAM2 \(Exec base: 0x([0-9a-fA-F]{8}),.*Size: 0x([0-9a-fA-F]{8})", line)
-            if not (m is None):
+            if m is not None:
                 size =  int(m.group(2), 16)
                 size = (size + 3) // 4 * 4
                 patch_ram_usage = {"base" : int(m.group(1), 16), "size" : size}
@@ -109,14 +117,25 @@ with open('meta.json') as f:
 
 import struct
 
+bin_base = symbols_addr['__Vectors']
+assert symbols_size['platform_patches'] <= 32 * 4
+
 app_base = meta['app']['base']
-print(f'app base set to: 0x{app_base:x}')
+print(f'app  base set to: 0x{app_base:x}')
+print(f"patches moved to: 0x{symbols_addr['__ALL_END']:x}")
 with open(STACK_BIN, 'r+b') as f:
-    f.seek(BIN_INFO_OFFSET + 4)
+    f.seek(symbols_addr['__APP_LOAD_ADD'] - bin_base)
     f.write(struct.pack('I', app_base))
-    f.seek(BIN_INFO_OFFSET)
+    f.seek(symbols_addr['__PLATFORM_VER'] - bin_base)
     (major, minor, patch) = struct.unpack('<HBB', f.read(4))
     meta['version'] = [major, minor, patch]
+
+    f.seek(symbols_addr['platform_patches'] - bin_base)
+    patches = f.read(symbols_size['platform_patches'])
+    f.seek(symbols_addr['__ALL_END'] - bin_base)
+    f.write(patches)
+    f.seek(symbols_addr['__PATCH_ADD'] - bin_base)
+    f.write(struct.pack('I', symbols_addr['__ALL_END']))
 
 print(f"version is {meta['version']}")
 
