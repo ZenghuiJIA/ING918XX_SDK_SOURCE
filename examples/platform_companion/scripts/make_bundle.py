@@ -4,6 +4,7 @@ import os
 import os.path
 import json
 import shutil
+import argparse
 
 OUTPUT_DIR = '../generated'
 PROJ_NAME = 'platform_companion'
@@ -24,6 +25,24 @@ added_api = ['platform_rom_hotfix', 'platform_rom_hotfix_using_fpb',
 PAGE = 1024 * 4 # size of a sector
 BIN_INFO_OFFSET = 0x000000CC
 patch_ram_usage = None
+custom_app_addr = -1
+
+def parse_args():
+    global custom_app_addr
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--app_addr',
+        type=lambda x: int(x, 0),
+        default=-1,
+        help='customize app address')
+
+    FLAGS, unparsed = parser.parse_known_args()
+    custom_app_addr = FLAGS.app_addr
+    if custom_app_addr > 0:
+        assert (custom_app_addr & (PAGE - 1)) == 0
+
+parse_args()
 
 if not os.path.exists(OUTPUT_DIR):
     os.mkdir(OUTPUT_DIR)
@@ -39,7 +58,7 @@ SYMS_TO_READ = set(['__Vectors', '__PATCH_ADD', '__PLATFORM_VER', '__ALL_END', '
 
 def get_meta_from_map(fn):
     r = {}
-    global PAGE, patch_ram_usage
+    global PAGE, patch_ram_usage, custom_app_addr
     with open(fn, 'r') as f:
         for line in f:
             m = re.match(r"^\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+(0x[0-9a-fA-F]{8})\s+Data\s+([0-9]+)", line)
@@ -67,6 +86,7 @@ def get_meta_from_map(fn):
                 patch_ram_usage = {"base" : int(m.group(1), 16), "size" : size}
 
     app_base = ((r['rom']['size'] + PAGE - 1) // PAGE) * PAGE + r['rom']['base']
+    if custom_app_addr > 0: app_base = custom_app_addr
     r['app'] = {"base": app_base}
     return r
 
