@@ -141,22 +141,29 @@ bin_base = symbols_addr['__Vectors']
 assert symbols_size['platform_patches'] <= 32 * 4
 
 app_base = meta['app']['base']
-print(f'app  base set to: 0x{app_base:x}')
-print(f"patches moved to: 0x{symbols_addr['__ALL_END']:x}")
+print(f'app  base set to     : 0x{app_base:x} (app entry address)')
+print(f"patches moved to     : 0x{symbols_addr['__ALL_END']:x}")
 with open(STACK_BIN, 'r+b') as f:
-    f.seek(symbols_addr['__APP_LOAD_ADD'] - bin_base)
-    f.write(struct.pack('I', app_base))
     f.seek(symbols_addr['__PLATFORM_VER'] - bin_base)
     (major, minor, patch) = struct.unpack('<HBB', f.read(4))
     meta['version'] = [major, minor, patch]
 
     f.seek(symbols_addr['platform_patches'] - bin_base)
     patches = f.read(symbols_size['platform_patches'])
+
+
     f.seek(symbols_addr['__ALL_END'] - bin_base)
     f.write(patches)
+    app_base_for_platform = f.tell() + bin_base
+    prog    = struct.pack("<IIHHHHI", 0x0, app_base_for_platform + 9, 0x4801, 0x6800, 0x4700, 0x0000, app_base + 4)
+    f.write(prog)
     f.seek(symbols_addr['__PATCH_ADD'] - bin_base)
-    f.write(struct.pack('I', symbols_addr['__ALL_END']))
+    f.write(struct.pack('<I', symbols_addr['__ALL_END']))
 
+    f.seek(symbols_addr['__APP_LOAD_ADD'] - bin_base)
+    f.write(struct.pack('<I', app_base_for_platform))
+
+print(f'app addr for platform: 0x{app_base_for_platform:x}')
 print(f"version is {meta['version']}")
 
 with open(f'{OUTPUT_DIR}/apis.json', 'w') as f:
