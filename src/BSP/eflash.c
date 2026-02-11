@@ -486,18 +486,6 @@ static void copy_security_data(uint32_t dst, uintptr_t src, int word_len)
     }
 }
 
-static int compare_arrays(const void* dst, const void* buff, size_t len) {
-    const unsigned char* p1 = (const unsigned char*)dst;
-    const unsigned char* p2 = (const unsigned char*)buff;
-    
-    for (size_t i = 0; i < len; i++) {
-        if (p1[i] != p2[i]) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 static int check_security_data(uint32_t dst, uintptr_t src, int word_len)
 {
     uint32_t buff[16];
@@ -511,7 +499,7 @@ static int check_security_data(uint32_t dst, uintptr_t src, int word_len)
             word_len--;
             src += 4;
         }
-        if (compare_arrays((void *)dst, (void *)buff, len * sizeof(buff[0])))
+        if (memcmp((void *)dst, (void *)buff, len * sizeof(buff[0])))
             return 1;
         dst += len * sizeof(buff[0]);
     }
