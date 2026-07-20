@@ -286,7 +286,7 @@ void UART_SendData(UART_TypeDef* pBase, uint8_t Data)
 
 uint8_t UART_ReceData(UART_TypeDef* pBase)
 {
-    return(pBase->DataRead);
+    return pBase->DataRead;
 }
 
 #if (INGCHIPS_FAMILY == INGCHIPS_FAMILY_916 || INGCHIPS_FAMILY == INGCHIPS_FAMILY_20)
