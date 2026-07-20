@@ -1,0 +1,1 @@
+This file verifies that the FWlib formatting gate ignores files outside src/FWlib.
