@@ -295,3 +295,8 @@ void UART_DmaEnable(UART_TypeDef *pBase, uint8_t tx_enable, uint8_t rx_enable, u
     pBase->DmaCon = rx_enable | (tx_enable << 1) | (dma_on_err << 2);
 }
 #endif
+
+uint32_t clang_format_existing_file_test(uint32_t value)
+{
+    return value;
+}
