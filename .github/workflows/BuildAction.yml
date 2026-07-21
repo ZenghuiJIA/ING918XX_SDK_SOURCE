@@ -63,24 +63,32 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
 
             current_file=""
+            annotation_count=0
             while IFS= read -r line; do
               case "$line" in
-                "+++ b/"*)
-                  current_file="${line#+++ b/}"
+                "+++ "*)
+                  current_file="${line#+++ }"
+                  current_file="${current_file#b/}"
+                  if [[ "$current_file" == "/dev/null" ]]; then
+                    current_file=""
+                  fi
                   ;;
                 "@@ "*)
-                  if [[ -n "$current_file" && "$line" =~ ^@@\ -([0-9]+) ]]; then
+                  if [[ -n "$current_file" && "$line" =~ \+([0-9]+)(,([0-9]+))? ]]; then
                     line_number="${BASH_REMATCH[1]}"
                     if (( line_number < 1 )); then
                       line_number=1
                     fi
-                    echo "::error file=$current_file,line=$line_number,title=clang-format::This changed hunk is not clang-formatted. Open the job summary to view the suggested patch."
+                    echo "::error file=$current_file,line=$line_number,title=clang-format::This changed hunk does not match .clang-format. Run 'git clang-format origin/develop', commit the result, or open the job summary to view the suggested patch."
+                    annotation_count=$((annotation_count + 1))
                   fi
                   ;;
               esac
             done <<< "$format_diff"
 
-            echo "::error title=clang-format::Changed FWlib lines are not clang-formatted. See the job summary for the suggested patch."
+            if (( annotation_count == 0 )); then
+              echo "::error title=clang-format::Changed FWlib lines do not match .clang-format. Open the job summary to view the suggested patch."
+            fi
             exit 1
           fi
 
