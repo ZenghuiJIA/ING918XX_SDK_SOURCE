@@ -29,14 +29,30 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes clang-format-18
+          sudo ln -sf /usr/bin/clang-format-18 /usr/local/bin/clang-format
+          sudo ln -sf /usr/bin/git-clang-format-18 /usr/local/bin/git-clang-format
+          clang-format --version
 
       - name: Check new files and changed lines
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          python3 tools/check_clang_format.py \
-            --base "$BASE_SHA" \
-            --clang-format clang-format-18
+          format_diff="$(
+            git clang-format \
+              --diff \
+              --binary clang-format \
+              "$BASE_SHA" \
+              HEAD \
+              -- \
+              src/FWlib
+          )"
+
+          printf '%s\n' "$format_diff"
+
+          if grep -q '^diff --git ' <<< "$format_diff"; then
+            echo "::error::Changed FWlib lines are not clang-formatted"
+            exit 1
+          fi
 
   build:
     runs-on: ubuntu-latest
