@@ -2,5 +2,5 @@
 
 uint32_t clang_format_negative_test(uint32_t value)
 {
-    return value + 1;
+    return value+1;
 }
