@@ -50,7 +50,37 @@ jobs:
           printf '%s\n' "$format_diff"
 
           if grep -q '^diff --git ' <<< "$format_diff"; then
-            echo "::error::Changed FWlib lines are not clang-formatted"
+            {
+              echo "## clang-format check failed"
+              echo
+              echo "The changed FWlib lines do not match \`.clang-format\`."
+              echo
+              echo '```diff'
+              printf '%s\n' "$format_diff"
+              echo '```'
+              echo
+              echo "Run \`git clang-format origin/develop\` locally and commit the result."
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            current_file=""
+            while IFS= read -r line; do
+              case "$line" in
+                "+++ b/"*)
+                  current_file="${line#+++ b/}"
+                  ;;
+                "@@ "*)
+                  if [[ -n "$current_file" && "$line" =~ ^@@\ -([0-9]+) ]]; then
+                    line_number="${BASH_REMATCH[1]}"
+                    if (( line_number < 1 )); then
+                      line_number=1
+                    fi
+                    echo "::error file=$current_file,line=$line_number,title=clang-format::This changed hunk is not clang-formatted. Open the job summary to view the suggested patch."
+                  fi
+                  ;;
+              esac
+            done <<< "$format_diff"
+
+            echo "::error title=clang-format::Changed FWlib lines are not clang-formatted. See the job summary for the suggested patch."
             exit 1
           fi
 
